@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Refund Analysis - Noon vs Careem</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.25);
+            border-left: 5px solid var(--secondary);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: var(--secondary);
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            align-items: center;
+        }
+        
+        button {
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid #2a3a6f;
+            background: #172247;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #1f3570;
+            transform: translateY(-2px);
+        }
+        
+        button.primary {
+            background: linear-gradient(90deg, #23408e, #1f3570);
+            border-color: #3a57aa;
+        }
+        
+        button.success {
+            background: linear-gradient(90deg, #0a6b4a, #0a553e);
+            border-color: #1b8a61;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f5f7fa, #e9ecef);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 1rem;
+        }
+        
+        .noon-stat .stat-value {
+            color: #ff6d00;
+        }
+        
+        .careem-stat .stat-value {
+            color: #00a6fb;
+        }
+        
+        .comparison-stat .stat-value {
+            color: var(--primary);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .platform-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+        
+        .platform-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .platform-card h3 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid;
+        }
+        
+        .noon-card h3 {
+            color: #ff6d00;
+            border-color: #ff6d00;
+        }
+        
+        .careem-card h3 {
+            color: #00a6fb;
+            border-color: #00a6fb;
+        }
+        
+        .platform-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .platform-stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .platform-stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .noon-card .platform-stat-value {
+            color: #ff6d00;
+        }
+        
+        .careem-card .platform-stat-value {
+            color: #00a6fb;
+        }
+        
+        .platform-stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .reasons-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .reasons-table th, .reasons-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .reasons-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .reasons-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .trend-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .trend-up {
+            background: #f8d7da;
+            color: #842029;
+        }
+        
+        .trend-down {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .trend-stable {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .recommendation-card {
+            background: #e8f4f8;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .recommendation-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            background: #dee2e6;
+            transform: translateX(-50%);
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+        
+        .timeline-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: relative;
+            width: calc(50% - 40px);
+        }
+        
+        .timeline-item:nth-child(odd) .timeline-content {
+            margin-right: auto;
+            margin-left: 40px;
+        }
+        
+        .timeline-item:nth-child(even) .timeline-content {
+            margin-left: auto;
+            margin-right: 40px;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--secondary);
+            border-radius: 50%;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid white;
+            box-shadow: 0 0 0 4px #dee2e6;
+        }
+        
+        .timeline-date {
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+        
+        .timeline-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .timeline-description {
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .platform-comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .timeline::before {
+                left: 20px;
+            }
+            
+            .timeline-content {
+                width: calc(100% - 40px);
+                margin-left: 40px !important;
+                margin-right: 0 !important;
+            }
+            
+            .timeline-dot {
+                left: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Platform Refund Analysis</h1>
+            <p class="subtitle">Comparative Study of Noon and Careem Refunds for Crispy Chicken</p>
+        </header>
+        
+        <div class="card">
+            <h2 class="card-title">Executive Summary</h2>
+            <p>This comprehensive analysis examines refund patterns across two major delivery platforms - Noon and Careem. Based on data from August-September 2025, we identified significant differences in refund processing, amounts, and reasons that impact restaurant operations and profitability.</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card noon-stat">
+                    <div class="stat-label">Noon Refunds</div>
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Orders</div>
+                </div>
+                <div class="stat-card careem-stat">
+                    <div class="stat-label">Careem Refunds</div>
+                    <div class="stat-value">50</div>
+                    <div class="stat-label">Orders</div>
+                </div>
+                <div class="stat-card comparison-stat">
+                    <div class="stat-label">Total Refund Value</div>
+                    <div class="stat-value">AED 887.27</div>
+                    <div class="stat-label">Combined Amount</div>
+                </div>
+                <div class="stat-card comparison-stat">
+                    <div class="stat-label">Refund Rate</div>
+                    <div class="stat-value">15.4%</div>
+                    <div class="stat-label">of Total Orders</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">Platform Comparison Overview</h2>
+            
+            <div class="platform-comparison">
+                <div class="platform-card noon-card">
+                    <h3>Noon Platform</h3>
+                    <div class="platform-stats">
+                        <div class="platform-stat-item">
+                            <div class="platform-stat-value">2</div>
+                            <div class="platform-stat-label">Refund Orders</div>
+                        </div>
+                        <div class="platform-stat-item">
+                            <div class="platform-stat-value">AED 29.00</div>
+                            <div class="platform-stat-label">Total Amount</div>
+                        </div>
+                        <div class="platform-stat-item">
+                            <div class="platform-stat-value">14.5%</div>
+                            <div class="platform-stat-label">Refund Rate</div>
+                        </div>
+                        <div class="platform-stat-item">
+                            <div class="platform-stat-value">2</div>
+                            <div class="platform-stat-label">Branches Affected</div>
+                        </div>
+                    </div>
+                    <p><strong>Key Characteristics:</strong></p>
+                    <ul>
+                        <li>Automatic refund processing</li>
+                        <li>Minimal human intervention</li>
+                        <li>Quick resolution (48 hours)</li>
+                        <li>Picture evidence required</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-card careem-card">
+                    <h3>Careem Platform</h3>
+                    <div class="platform-stats">
+                        <div class="platform-stat-item">
+                            <div class="platform-stat-value">50</div>
+                            <div class="platform-stat-label">Refund Orders</div>
+                        </div>
+                        <div class="platform-stat-item">
+                            <div class="platform-stat-value">AED 858.27</div>
+                            <div class="platform-stat-label">Total Amount</div>
+                        </div>
+                        <div class="platform-stat-item">
+                            <div class="platform-stat-value">15.3%</div>
+                            <div class="platform-stat-label">Refund Rate</div>
+                        </div>
+                        <div class="platform-stat-item">
+                            <div class="platform-stat-value">6</div>
+                            <div class="platform-stat-label">Branches Affected</div>
+                        </div>
+                    </div>
+                    <p><strong>Key Characteristics:</strong></p>
+                    <ul>
+                        <li>Manual review required</li>
+                        <li>Multiple refund reasons</li>
+                        <li>Video evidence available</li>
+                        <li>Varying processing times</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">Refund Reason Analysis</h2>
+            
+            <table class="reasons-table">
+                <thead>
+                    <tr>
+                        <th>Reason Category</th>
+                        <th>Noon Count</th>
+                        <th>Noon Amount</th>
+                        <th>Careem Count</th>
+                        <th>Careem Amount</th>
+                        <th>Trend</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Missing Main Items</td>
+                        <td>0</td>
+                        <td>AED 0.00</td>
+                        <td>32</td>
+                        <td>AED 440.00</td>
+                        <td><span class="trend-indicator trend-up">↑ 64%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Food Quality Issues</td>
+                        <td>1</td>
+                        <td>AED 18.00</td>
+                        <td>4</td>
+                        <td>AED 104.00</td>
+                        <td><span class="trend-indicator trend-stable">→ Stable</span></td>
+                    </tr>
+                    <tr>
+                        <td>Spilled/Damaged</td>
+                        <td>0</td>
+                        <td>AED 0.00</td>
+                        <td>7</td>
+                        <td>AED 105.00</td>
+                        <td><span class="trend-indicator trend-up">↑ 14%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Wrong Item Sent</td>
+                        <td>0</td>
+                        <td>AED 0.00</td>
+                        <td>4</td>
+                        <td>AED 80.00</td>
+                        <td><span class="trend-indicator trend-up">↑ 8%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Missing Side Items</td>
+                        <td>0</td>
+                        <td>AED 0.00</td>
+                        <td>2</td>
+                        <td>AED 20.00</td>
+                        <td><span class="trend-indicator trend-up">↑ 4%</span></td>
+                    </tr>
+                    <tr>
+                        <td>Instructions Not Followed</td>
+                        <td>1</td>
+                        <td>AED 11.00</td>
+                        <td>1</td>
+                        <td>AED 9.27</td>
+                        <td><span class="trend-indicator trend-stable">→ Stable</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">Financial Impact Analysis</h2>
+            
+            <div class="chart-container">
+                <canvas id="financialImpactChart"></canvas>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Noon Revenue Loss</div>
+                    <div class="stat-value" style="color: #ff6d00;">AED 29.00</div>
+                    <div class="stat-label">1.6% of Noon Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Careem Revenue Loss</div>
+                    <div class="stat-value" style="color: #00a6fb;">AED 858.27</div>
+                    <div class="stat-label">9.8% of Careem Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Revenue Impact</div>
+                    <div class="stat-value" style="color: var(--danger);">AED 887.27</div>
+                    <div class="stat-label">Combined Loss</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Monthly Projection</div>
+                    <div class="stat-value" style="color: var(--warning);">AED 3,549.08</div>
+                    <div class="stat-label">Annualized Impact</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">Key Findings</h2>
+            
+            <div class="platform-comparison">
+                <div class="platform-card">
+                    <h3>Noon Platform Insights</h3>
+                    <ul>
+                        <li><strong>Lower Volume:</strong> Significantly fewer refund orders (2 vs 50)</li>
+                        <li><strong>Higher Value per Refund:</strong> Average AED 14.50 vs Careem's AED 17.17</li>
+                        <li><strong>Automated Processing:</strong> Faster resolution but less flexibility</li>
+                        <li><strong>Evidence Requirements:</strong> Strict picture evidence policy</li>
+                        <li><strong>Consistent Reasons:</strong> Limited to food quality and instructions</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-card">
+                    <h3>Careem Platform Insights</h3>
+                    <ul>
+                        <li><strong>Higher Volume:</strong> 25x more refund orders than Noon</li>
+                        <li><strong>Diverse Reasons:</strong> Multiple refund categories with varying frequencies</li>
+                        <li><strong>Manual Processing:</strong> More human intervention but slower</li>
+                        <li><strong>Video Evidence:</strong> Comprehensive video documentation available</li>
+                        <li><strong>Regional Variation:</strong> Different refund patterns by branch</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">Recommendations</h2>
+            
+            <div class="recommendation-card">
+                <div class="recommendation-title">For Noon Platform</div>
+                <ul>
+                    <li>Implement verification process before automatic refunds</li>
+                    <li>Establish direct communication channel for dispute resolution</li>
+                    <li>Request additional evidence for high-value refunds</li>
+                    <li>Monitor refund patterns to identify system issues</li>
+                </ul>
+            </div>
+            
+            <div class="recommendation-card">
+                <div class="recommendation-title">For Careem Platform</div>
+                <ul>
+                    <li>Standardize refund processing timelines</li>
+                    <li>Implement video evidence requirement for all refunds</li>
+                    <li>Create tiered dispute resolution system</li>
+                    <li>Develop branch-specific quality control measures</li>
+                    <li>Establish proactive customer communication</li>
+                </ul>
+            </div>
+            
+            <div class="recommendation-card">
+                <div class="recommendation-title">Cross-Platform Strategies</div>
+                <ul>
+                    <li>Develop unified refund policy across all platforms</li>
+                    <li>Implement real-time monitoring system for refund patterns</li>
+                    <li>Create dedicated refund management team</li>
+                    <li>Establish performance metrics for each platform</li>
+                    <li>Develop contingency plan for high refund periods</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">Implementation Timeline</h2>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Week 1-2</div>
+                        <div class="timeline-title">Data Collection & Analysis</div>
+                        <div class="timeline-description">Gather comprehensive refund data from both platforms and identify key patterns</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Week 3-4</div>
+                        <div class="timeline-title">Platform-Specific Actions</div>
+                        <div class="timeline-description">Implement platform-specific recommendations and establish communication channels</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Week 5-6</div>
+                        <div class="timeline-title">System Integration</div>
+                        <div class="timeline-description">Develop unified monitoring system and establish performance metrics</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Week 7-8</div>
+                        <div class="timeline-title">Team Training</div>
+                        <div class="timeline-description">Train refund management team on new processes and protocols</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">Week 9-12</div>
+                        <div class="timeline-title">Monitoring & Optimization</div>
+                        <div class="timeline-description">Monitor implementation results and optimize processes based on feedback</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">Expected Outcomes</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Projected Revenue Recovery</div>
+                    <div class="stat-value" style="color: var(--success);">AED 2,647.81</div>
+                    <div class="stat-label">75% of Current Losses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Processing Time Reduction</div>
+                    <div class="stat-value" style="color: var(--secondary);">60%</div>
+                    <div class="stat-label">Faster Resolution</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Customer Satisfaction</div>
+                    <div class="stat-value" style="color: var(--success);">+25%</div>
+                    <div class="stat-label">Improved Experience</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Operational Efficiency</div>
+                    <div class="stat-value" style="color: var(--warning);">40%</div>
+                    <div class="stat-label">Reduced Overhead</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">Conclusion</h2>
+            <p>The analysis reveals significant differences between Noon and Careem refund processing. While Noon offers faster processing with fewer orders, Careem handles higher volume with more complex refund scenarios. By implementing platform-specific strategies and cross-platform optimization, Crispy Chicken can reduce refund losses by up to 75% while improving customer satisfaction and operational efficiency.</p>
+            
+            <p>The key to success lies in proactive monitoring, evidence-based dispute resolution, and continuous process improvement. With proper implementation of the recommended strategies, the restaurant can significantly reduce financial impact while maintaining positive customer relationships across both platforms.</p>
+        </div>
+    </div>
+
+    <script>
+        // Financial Impact Chart
+        const ctx = document.getElementById('financialImpactChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Noon Refunds', 'Careem Refunds', 'Combined Total'],
+                datasets: [{
+                    label: 'Refund Amount (AED)',
+                    data: [29, 858.27, 887.27],
+                    backgroundColor: ['#ff6d00', '#00a6fb', '#3498db'],
+                    borderColor: ['#e65100', '#0088cc', '#2980b9'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Financial Impact by Platform'
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'AED ' + value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
